@@ -914,6 +914,8 @@ class l1d_cache_config : public cache_config {
     cache_config::init(config, status);
   }
   unsigned l1_latency;
+  unsigned dsm_latency; //DSM change
+
   unsigned l1_banks;
   unsigned l1_banks_log2;
   unsigned l1_banks_byte_interleaving;

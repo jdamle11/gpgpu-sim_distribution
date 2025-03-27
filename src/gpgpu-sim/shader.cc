@@ -1341,7 +1341,7 @@ void scheduler_unit::cycle() {
 
             assert(warp(warp_id).inst_in_pipeline());
 
-            if ((pI->op == LOAD_OP) || (pI->op == STORE_OP) ||
+            if ((pI->op == LOAD_OP) || (pI->op == STORE_OP) || (pI->op == S_LOAD_OP) || //DSM change
                 (pI->op == MEMORY_BARRIER_OP) ||
                 (pI->op == TENSOR_CORE_LOAD_OP) ||
                 (pI->op == TENSOR_CORE_STORE_OP)) {
@@ -2076,28 +2076,44 @@ mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
                                     m_core->get_gpu()->gpu_tot_sim_cycle);
       unsigned bank_id = m_config->m_L1D_config.set_bank(mf->get_addr());
       assert(bank_id < m_config->m_L1D_config.l1_banks);
-
-      if ((l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1]) ==
+      //DSM Change begin
+      if(inst.op == S_LOAD_OP) {
+        if((l1_latency_queue[bank_id][m_config->m_L1D_config.dsm_latency - 1]) ==
           NULL) {
-        l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1] = mf;
-
-        if (mf->get_inst().is_store()) {
-          unsigned inc_ack =
-              (m_config->m_L1D_config.get_mshr_type() == SECTOR_ASSOC)
-                  ? (mf->get_data_size() / SECTOR_SIZE)
-                  : 1;
-
-          for (unsigned i = 0; i < inc_ack; ++i)
-            m_core->inc_store_req(inst.warp_id());
+            l1_latency_queue([bank_id][m_config->m_L1D_config.dsm_latency - 1]) = mf;
+            //add store logic here
+          }
+        else {
+          result = BK_CONF;
+          m_stats->gpgpu_n_l1cache_bkconflict++;
+          delete mf;
+          break;
         }
+      }
+      else { //DSM Change end
 
-        inst.accessq_pop_back();
-      } else {
-        result = BK_CONF;
-        m_stats->gpgpu_n_l1cache_bkconflict++;
-        delete mf;
-        break;  // do not try again, just break from the loop and try the next
-                // cycle
+        if ((l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1]) ==
+            NULL) {
+          l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1] = mf;
+
+          if (mf->get_inst().is_store()) {
+            unsigned inc_ack =
+                (m_config->m_L1D_config.get_mshr_type() == SECTOR_ASSOC)
+                    ? (mf->get_data_size() / SECTOR_SIZE)
+                    : 1;
+
+            for (unsigned i = 0; i < inc_ack; ++i)
+              m_core->inc_store_req(inst.warp_id());
+          }
+
+          inst.accessq_pop_back();
+        } else {
+          result = BK_CONF;
+          m_stats->gpgpu_n_l1cache_bkconflict++;
+          delete mf;
+          break;  // do not try again, just break from the loop and try the next
+                  // cycle
+        }
       }
     }
     if (!inst.accessq_empty() && result != BK_CONF) result = COAL_STALL;
@@ -2643,7 +2659,7 @@ ldst_unit::ldst_unit(mem_fetch_interface *icnt,
     assert(m_config->m_L1D_config.l1_latency > 0);
 
     for (unsigned j = 0; j < m_config->m_L1D_config.l1_banks; j++)
-      l1_latency_queue[j].resize(m_config->m_L1D_config.l1_latency,
+      l1_latency_queue[j].resize(m_config->m_L1D_config.dsm_latency, //DSM change, was .l1_latency
                                  (mem_fetch *)NULL);
   }
   m_name = "MEM ";
