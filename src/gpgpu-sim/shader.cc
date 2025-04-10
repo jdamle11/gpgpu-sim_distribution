@@ -1028,8 +1028,14 @@ void shader_core_ctx::fetch() {
 void exec_shader_core_ctx::func_exec_inst(warp_inst_t &inst) {
   execute_warp_inst_t(inst);
   if (inst.is_load() || inst.is_store()) {
+    // if(inst.is_load()) {
+    //   printf("LOAD BITCH!!!!!!\n");
+    // }
+    // else if(inst.is_store()) {
+    //   printf("STORE BITCH!!!!!!!!\n");
+    // }
     inst.generate_mem_accesses();
-    // inst.print_m_accessq();
+    //inst.print_m_accessq();
   }
 }
 
@@ -1341,7 +1347,7 @@ void scheduler_unit::cycle() {
 
             assert(warp(warp_id).inst_in_pipeline());
 
-            if ((pI->op == LOAD_OP) || (pI->op == STORE_OP) || (pI->op == S_LOAD_OP) || //DSM change
+            if ((pI->op == LOAD_OP) || (pI->op == STORE_OP) || //(pI->op == S_LOAD_OP) || //DSM change
                 (pI->op == MEMORY_BARRIER_OP) ||
                 (pI->op == TENSOR_CORE_LOAD_OP) ||
                 (pI->op == TENSOR_CORE_STORE_OP)) {
@@ -2077,20 +2083,20 @@ mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
       unsigned bank_id = m_config->m_L1D_config.set_bank(mf->get_addr());
       assert(bank_id < m_config->m_L1D_config.l1_banks);
       //DSM Change begin
-      if(inst.op == S_LOAD_OP) {
-        if((l1_latency_queue[bank_id][m_config->m_L1D_config.dsm_latency - 1]) ==
-          NULL) {
-            l1_latency_queue([bank_id][m_config->m_L1D_config.dsm_latency - 1]) = mf;
-            //add store logic here
-          }
-        else {
-          result = BK_CONF;
-          m_stats->gpgpu_n_l1cache_bkconflict++;
-          delete mf;
-          break;
-        }
-      }
-      else { //DSM Change end
+      // if(inst.op == S_LOAD_OP) {
+      //   if((l1_latency_queue[bank_id][m_config->m_L1D_config.dsm_latency - 1]) ==
+      //     NULL) {
+      //       l1_latency_queue([bank_id][m_config->m_L1D_config.dsm_latency - 1]) = mf;
+      //       //add store logic here
+      //     }
+      //   else {
+      //     result = BK_CONF;
+      //     m_stats->gpgpu_n_l1cache_bkconflict++;
+      //     delete mf;
+      //     break;
+      //   }
+      // }
+      // else { //DSM Change end
 
         if ((l1_latency_queue[bank_id][m_config->m_L1D_config.l1_latency - 1]) ==
             NULL) {
@@ -2114,7 +2120,7 @@ mem_stage_stall_type ldst_unit::process_memory_access_queue_l1cache(
           break;  // do not try again, just break from the loop and try the next
                   // cycle
         }
-      }
+      //}
     }
     if (!inst.accessq_empty() && result != BK_CONF) result = COAL_STALL;
 
@@ -2547,6 +2553,10 @@ pipelined_simd_unit::pipelined_simd_unit(register_set *result_port,
                                          shader_core_ctx *core,
                                          unsigned issue_reg_id)
     : simd_function_unit(config) {
+  // if(max_latency == 20) {
+  //   //printf("I am here\n");
+  // }
+  printf("Setting max latency\n");
   m_result_port = result_port;
   m_pipeline_depth = max_latency;
   m_pipeline_reg = new warp_inst_t *[m_pipeline_depth];
@@ -2646,6 +2656,7 @@ ldst_unit::ldst_unit(mem_fetch_interface *icnt,
       m_next_wb(config),
       m_gpu(gpu) {
   assert(config->smem_latency > 1);
+  //printf("BRUHHHH!\n");
   init(icnt, mf_allocator, core, operand_collector, scoreboard, config,
        mem_config, stats, sid, tpc);
   if (!m_config->m_L1D_config.disabled()) {
@@ -2659,7 +2670,7 @@ ldst_unit::ldst_unit(mem_fetch_interface *icnt,
     assert(m_config->m_L1D_config.l1_latency > 0);
 
     for (unsigned j = 0; j < m_config->m_L1D_config.l1_banks; j++)
-      l1_latency_queue[j].resize(m_config->m_L1D_config.dsm_latency, //DSM change, was .l1_latency
+      l1_latency_queue[j].resize(m_config->m_L1D_config.l1_latency, //DSM change, was .l1_latency
                                  (mem_fetch *)NULL);
   }
   m_name = "MEM ";
@@ -2681,8 +2692,15 @@ ldst_unit::ldst_unit(mem_fetch_interface *icnt,
 void ldst_unit::issue(register_set &reg_set) {
   warp_inst_t *inst = *(reg_set.get_ready());
 
+
   // record how many pending register writes/memory accesses there are for this
   // instruction
+  if(inst->is_load()) {
+    printf("LOAD_Issue!!!!!\n");
+  }
+  else if(inst->is_store()) {
+    printf("STORE_Issue!!!!!!\n");
+  }
   assert(inst->empty() == false);
   if (inst->is_load() and inst->space.get_type() != shared_space) {
     unsigned warp_id = inst->warp_id();
@@ -2939,6 +2957,8 @@ void ldst_unit::cycle() {
     unsigned warp_id = pipe_reg.warp_id();
     if (pipe_reg.is_load()) {
       if (pipe_reg.space.get_type() == shared_space) {
+        printf("Load Using SMEM Latency\n");
+        
         if (m_pipeline_reg[m_config->smem_latency - 1]->empty()) {
           // new shared memory request
           move_warp(m_pipeline_reg[m_config->smem_latency - 1], m_dispatch_reg);

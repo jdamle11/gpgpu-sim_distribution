@@ -358,6 +358,7 @@ void gpgpu_context::gpgpu_ptx_info_load_from_filename(const char *filename,
       extra_flags, filename, ptxas_filename.c_str());
   int result = system(buff);
   if (result != 0) {
+    printf("PLACE 1\n");
     printf("GPGPU-Sim PTX: ERROR ** while loading PTX (b) %d\n", result);
     printf("               Ensure ptxas is in your path.\n");
     exit(1);
@@ -468,6 +469,7 @@ void gpgpu_context::gpgpu_ptxinfo_load_from_string(const char *p_for_info,
         result = system(commandline);
       }
       if (result != 0) {
+        printf("PLACE 2\n");
         printf("GPGPU-Sim PTX: ERROR ** while loading PTX (b) %d\n", result);
         printf("               Ensure ptxas is in your path.\n");
         exit(1);
@@ -530,6 +532,7 @@ void gpgpu_context::gpgpu_ptxinfo_load_from_string(const char *p_for_info,
     fflush(stdout);
     result = system(commandline);
     if (result != 0) {
+      printf("PLACE 3\n");
       printf("GPGPU-Sim PTX: ERROR ** while loading PTX (b) %d\n", result);
       printf("               Ensure ptxas is in your path.\n");
       exit(1);

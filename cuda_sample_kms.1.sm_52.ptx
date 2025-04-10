@@ -1,0 +1,24 @@
+
+
+
+
+
+
+
+
+.version 7.8
+.target sm_52
+.address_size 64
+
+
+
+.visible .entry _Z6kernelv()
+{
+
+
+
+bar.sync 0;
+ret;
+
+}
+

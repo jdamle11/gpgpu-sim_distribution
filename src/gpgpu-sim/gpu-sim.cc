@@ -369,8 +369,8 @@ void shader_core_config::reg_options(class OptionParser *opp) {
                          "l1 banks hashing function", "0");
   option_parser_register(opp, "-gpgpu_l1_latency", OPT_UINT32,
                          &m_L1D_config.l1_latency, "L1 Hit Latency", "1");
-  option_parser_register(opp, "-gpgpu_dsm_latency", OPT_UINT32, //DSM change
-                         &m_L1D_config.dsm_latency, "DSM Hit Latency", "1");
+  //option_parser_register(opp, "-gpgpu_dsm_latency", OPT_UINT32, //DSM change
+                         //&m_L1D_config.dsm_latency, "DSM Hit Latency", "1");
   option_parser_register(opp, "-gpgpu_smem_latency", OPT_UINT32, &smem_latency,
                          "smem Latency", "3");
   option_parser_register(opp, "-gpgpu_cache:dl1PrefL1", OPT_CSTR,
@@ -1267,6 +1267,8 @@ void gpgpu_sim::print_stats(unsigned long long streamID) {
     printf(
         "----------------------------Interconnect-DETAILS----------------------"
         "----------\n");
+    printf("HERHERHEHREHREHRHEHRHERHER\n");
+    fflush(stdout);
     icnt_display_stats();
     icnt_display_overall_stats();
     printf(
@@ -1649,11 +1651,13 @@ void shader_core_ctx::mem_instruction_stats(const warp_inst_t &inst) {
   unsigned active_count = inst.active_count();
   // this breaks some encapsulation: the is_[space] functions, if you change
   // those, change this.
+  printf("Active count Outside Switch\n");
   switch (inst.space.get_type()) {
     case undefined_space:
     case reg_space:
       break;
     case shared_space:
+      printf("Active Count Inside Shared Space\n");
       m_stats->gpgpu_n_shmem_insn += active_count;
       break;
     case sstarr_space:

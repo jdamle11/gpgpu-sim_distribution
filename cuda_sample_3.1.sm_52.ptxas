@@ -1,0 +1,5 @@
+ptxas info    : 23 bytes gmem
+ptxas info    : Compiling entry function '_Z6kernelv' for 'sm_52'
+ptxas info    : Function properties for _Z6kernelv
+    8 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 8 registers, 1024 bytes smem, 320 bytes cmem[0]

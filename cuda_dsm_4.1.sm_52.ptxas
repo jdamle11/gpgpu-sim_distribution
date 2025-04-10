@@ -1,0 +1,1 @@
+ptxas fatal   : Value 'sm_4' is not defined for option 'gpu-name'

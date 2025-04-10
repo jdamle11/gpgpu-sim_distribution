@@ -1,0 +1,9 @@
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z7kernel2Pi' for 'sm_52'
+ptxas info    : Function properties for _Z7kernel2Pi
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 6 registers, 1024 bytes smem, 328 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z7kernel1Pi' for 'sm_52'
+ptxas info    : Function properties for _Z7kernel1Pi
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 5 registers, 1024 bytes smem, 328 bytes cmem[0]

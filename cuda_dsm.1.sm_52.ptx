@@ -1,0 +1,68 @@
+
+
+
+
+
+
+
+
+.version 7.8
+.target sm_52
+.address_size 64
+
+
+
+
+
+.visible .entry _Z33dsm_kernel_manual_cluster_barrierPi(
+.param .u64 _Z33dsm_kernel_manual_cluster_barrierPi_param_0
+)
+{
+.reg .pred %p<3>;
+.reg .b32 %r<25>;
+.reg .b64 %rd<5>;
+
+	.shared .align 4 .b8 dsm_array[2048];
+
+	.shared .align 4 .u32 block_counter;
+
+ld.param.u64 %rd1, [_Z33dsm_kernel_manual_cluster_barrierPi_param_0];
+mov.u32 %r1, %ctaid.x;
+setp.eq.s32 %p1, %r1, 0;
+selp.b32 %r3, 1000, 2000, %p1;
+mov.u32 %r2, %tid.x;
+add.s32 %r4, %r3, %r2;
+add.s32 %r5, %r1, 1;
+shr.u32 %r6, %r5, 31;
+add.s32 %r7, %r5, %r6;
+and.b32 %r8, %r7, 4194302;
+sub.s32 %r9, %r5, %r8;
+shl.b32 %r10, %r9, 10;
+mov.u32 %r11, dsm_array;
+add.s32 %r12, %r11, %r10;
+shl.b32 %r13, %r2, 2;
+add.s32 %r14, %r12, %r13;
+st.shared.u32 [%r14], %r4;
+setp.ne.s32 %p2, %r2, 0;
+@%p2 bra $L__BB0_2;
+
+mov.u32 %r15, block_counter;
+atom.shared.add.u32 %r16, [%r15], 1;
+
+$L__BB0_2:
+bar.sync 0;
+bar.sync 0;
+shl.b32 %r17, %r1, 10;
+add.s32 %r19, %r11, %r17;
+add.s32 %r21, %r19, %r13;
+ld.shared.u32 %r22, [%r21];
+mov.u32 %r23, %ntid.x;
+mad.lo.s32 %r24, %r1, %r23, %r2;
+cvta.to.global.u64 %rd2, %rd1;
+mul.wide.u32 %rd3, %r24, 4;
+add.s64 %rd4, %rd2, %rd3;
+st.global.u32 [%rd4], %r22;
+ret;
+
+}
+

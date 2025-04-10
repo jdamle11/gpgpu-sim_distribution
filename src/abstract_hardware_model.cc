@@ -285,7 +285,7 @@ void warp_inst_t::broadcast_barrier_reduction(
 
 void warp_inst_t::generate_mem_accesses() {
   if (empty() || op == MEMORY_BARRIER_OP || m_mem_accesses_created) return;
-  if (!((op == LOAD_OP) || (op == TENSOR_CORE_LOAD_OP) || (op == STORE_OP) || (op == S_LOAD_OP) || //DSM change
+  if (!((op == LOAD_OP) || (op == TENSOR_CORE_LOAD_OP) || (op == STORE_OP) || //(op == S_LOAD_OP) || //DSM change
         (op == TENSOR_CORE_STORE_OP)))
     return;
   if (m_warp_active_mask.count() == 0) return;  // predicated off
@@ -300,6 +300,7 @@ void warp_inst_t::generate_mem_accesses() {
   bool is_write = is_store();
 
   mem_access_type access_type;
+  printf("GENERATE MEM ACCESSES\n");
   switch (space.get_type()) {
     case const_space:
     case param_space_kernel:
@@ -316,6 +317,7 @@ void warp_inst_t::generate_mem_accesses() {
       access_type = is_write ? LOCAL_ACC_W : LOCAL_ACC_R;
       break;
     case shared_space:
+      printf("SHARED\n");
       break;
     case sstarr_space:
       break;
@@ -1190,9 +1192,18 @@ void simt_stack::update(simt_mask_t &thread_done, addr_vector_t &next_pc,
 
 void core_t::execute_warp_inst_t(warp_inst_t &inst, unsigned warpId) {
   for (unsigned t = 0; t < m_warp_size; t++) {
+    // if(inst.is_load()) {
+    //   printf("LOAD_OUT!!!!\n");
+    // }
     if (inst.active(t)) {
       if (warpId == (unsigned(-1))) warpId = inst.warp_id();
       unsigned tid = m_warp_size * warpId + t;
+      // if(inst.is_load()) {
+      //   printf("LOAD!!!!!\n");
+      // }
+      // else if(inst.is_store()) {
+      //   printf("STORE!!!!!!\n");
+      // }
       m_thread[tid]->ptx_exec_inst(inst, t);
 
       // virtual function

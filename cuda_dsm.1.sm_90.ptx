@@ -1,0 +1,98 @@
+
+
+
+
+
+
+
+
+.version 7.8
+.target sm_90
+.address_size 64
+
+
+
+
+
+
+
+.visible .entry _Z33dsm_kernel_manual_cluster_barrierPi(
+.param .u64 _Z33dsm_kernel_manual_cluster_barrierPi_param_0
+)
+{
+.reg .pred %p<6>;
+.reg .b32 %r<31>;
+.reg .b64 %rd<5>;
+
+	.shared .align 4 .b8 dsm_array[2048];
+
+	.shared .align 4 .u32 block_counter;
+
+	.shared .align 4 .u32 barrier_sense;
+
+	.shared .align 4 .u32 _ZZ22my_syncthreads_clusteriE11local_sense;
+
+ld.param.u64 %rd1, [_Z33dsm_kernel_manual_cluster_barrierPi_param_0];
+mov.u32 %r1, %ctaid.x;
+setp.eq.s32 %p1, %r1, 0;
+selp.b32 %r3, 1000, 2000, %p1;
+mov.u32 %r2, %tid.x;
+add.s32 %r4, %r3, %r2;
+add.s32 %r5, %r1, 1;
+shr.u32 %r6, %r5, 31;
+add.s32 %r7, %r5, %r6;
+and.b32 %r8, %r7, 4194302;
+sub.s32 %r9, %r5, %r8;
+shl.b32 %r10, %r9, 10;
+mov.u32 %r11, dsm_array;
+add.s32 %r12, %r11, %r10;
+shl.b32 %r13, %r2, 2;
+add.s32 %r14, %r12, %r13;
+st.shared.u32 [%r14], %r4;
+setp.ne.s32 %p2, %r2, 0;
+@%p2 bra $L__BB0_2;
+
+mov.u32 %r15, block_counter;
+atom.shared.add.u32 %r16, [%r15], 1;
+st.shared.u32 [_ZZ22my_syncthreads_clusteriE11local_sense], %r16;
+
+$L__BB0_2:
+bar.sync 0;
+@%p2 bra $L__BB0_7;
+
+ld.shared.u32 %r17, [_ZZ22my_syncthreads_clusteriE11local_sense];
+setp.eq.s32 %p4, %r17, 1;
+@%p4 bra $L__BB0_6;
+bra.uni $L__BB0_4;
+
+$L__BB0_6:
+mov.u32 %r20, 0;
+st.shared.u32 [block_counter], %r20;
+mov.u32 %r21, barrier_sense;
+atom.shared.exch.b32 %r22, [%r21], 1;
+bra.uni $L__BB0_7;
+
+$L__BB0_4:
+mov.u32 %r18, barrier_sense;
+
+$L__BB0_5:
+atom.shared.add.u32 %r19, [%r18], 0;
+setp.eq.s32 %p5, %r19, 0;
+@%p5 bra $L__BB0_5;
+
+$L__BB0_7:
+bar.sync 0;
+shl.b32 %r23, %r1, 10;
+add.s32 %r25, %r11, %r23;
+add.s32 %r27, %r25, %r13;
+ld.shared.u32 %r28, [%r27];
+mov.u32 %r29, %ntid.x;
+mad.lo.s32 %r30, %r1, %r29, %r2;
+cvta.to.global.u64 %rd2, %rd1;
+mul.wide.u32 %rd3, %r30, 4;
+add.s64 %rd4, %rd2, %rd3;
+st.global.u32 [%rd4], %r28;
+ret;
+
+}
+

@@ -119,7 +119,7 @@ enum uarch_op_t {
   INTP_OP,
   ALU_SFU_OP,
   LOAD_OP,
-  S_LOAD_OP, //special load op, DSM change
+  //S_LOAD_OP, //special load op, DSM change
   TENSOR_CORE_LOAD_OP,
   TENSOR_CORE_STORE_OP,
   STORE_OP,
@@ -972,7 +972,7 @@ class inst_t {
     fprintf(fp, " [inst @ pc=0x%04llx] ", pc);
   }
   bool is_load() const {
-    return (op == LOAD_OP || op == TENSOR_CORE_LOAD_OP || op == S_LOAD_OP || //DSM change
+    return (op == LOAD_OP || op == TENSOR_CORE_LOAD_OP || //op == S_LOAD_OP || //DSM change
             memory_op == memory_load);
   }
   bool is_store() const {
@@ -1058,7 +1058,7 @@ class inst_t {
 enum divergence_support_t { POST_DOMINATOR = 1, NUM_SIMD_MODEL };
 
 const unsigned MAX_ACCESSES_PER_INSN_PER_THREAD = 8;
-inst_t
+//inst_t
 class warp_inst_t : public inst_t {
  public:
   // constructors
