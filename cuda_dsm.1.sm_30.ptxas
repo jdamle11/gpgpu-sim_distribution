@@ -1,0 +1,5 @@
+ptxas info    : 33 bytes gmem
+ptxas info    : Compiling entry function '_Z33dsm_kernel_manual_cluster_barrierPi' for 'sm_30'
+ptxas info    : Function properties for _Z33dsm_kernel_manual_cluster_barrierPi
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 18 registers, 2048 bytes smem, 328 bytes cmem[0]

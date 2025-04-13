@@ -1028,12 +1028,6 @@ void shader_core_ctx::fetch() {
 void exec_shader_core_ctx::func_exec_inst(warp_inst_t &inst) {
   execute_warp_inst_t(inst);
   if (inst.is_load() || inst.is_store()) {
-    // if(inst.is_load()) {
-    //   printf("LOAD BITCH!!!!!!\n");
-    // }
-    // else if(inst.is_store()) {
-    //   printf("STORE BITCH!!!!!!!!\n");
-    // }
     inst.generate_mem_accesses();
     //inst.print_m_accessq();
   }
@@ -1050,6 +1044,12 @@ void shader_core_ctx::issue_warp(register_set &pipe_reg_set,
   m_warp[warp_id]->ibuffer_free();
   assert(next_inst->valid());
   **pipe_reg = *next_inst;  // static instruction information
+  // if((*pipe_reg)->is_load()) {
+  //   printf("Load Issue \n");
+  // }
+  // else if((*pipe_reg)->is_store()) {
+  //   printf("Store Issue \n");
+  // }
   (*pipe_reg)->issue(
       active_mask, warp_id, m_gpu->gpu_tot_sim_cycle + m_gpu->gpu_sim_cycle,
       m_warp[warp_id]->get_dynamic_warp_id(), sch_id,
@@ -2553,10 +2553,6 @@ pipelined_simd_unit::pipelined_simd_unit(register_set *result_port,
                                          shader_core_ctx *core,
                                          unsigned issue_reg_id)
     : simd_function_unit(config) {
-  // if(max_latency == 20) {
-  //   //printf("I am here\n");
-  // }
-  printf("Setting max latency\n");
   m_result_port = result_port;
   m_pipeline_depth = max_latency;
   m_pipeline_reg = new warp_inst_t *[m_pipeline_depth];
@@ -2695,12 +2691,12 @@ void ldst_unit::issue(register_set &reg_set) {
 
   // record how many pending register writes/memory accesses there are for this
   // instruction
-  if(inst->is_load()) {
-    printf("LOAD_Issue!!!!!\n");
-  }
-  else if(inst->is_store()) {
-    printf("STORE_Issue!!!!!!\n");
-  }
+  // if(inst->is_load()) {
+  //   printf("LOAD_Issue!!!!!\n");
+  // }
+  // else if(inst->is_store()) {
+  //   printf("STORE_Issue!!!!!!\n");
+  // }
   assert(inst->empty() == false);
   if (inst->is_load() and inst->space.get_type() != shared_space) {
     unsigned warp_id = inst->warp_id();

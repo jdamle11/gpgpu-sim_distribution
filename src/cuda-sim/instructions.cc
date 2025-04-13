@@ -30,6 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "our_cuda_header.h"
 #include "instructions.h"
 #include "half.h"
 #include "half.hpp"
@@ -3291,6 +3292,7 @@ void decode_space(memory_space_t &space, ptx_thread_info *thread,
                   const operand_info &op, memory_space *&mem, addr_t &addr) {
   unsigned smid = thread->get_hw_sid();
   unsigned hwtid = thread->get_hw_tid();
+  int dsm_decoding_failure = 1;
 
   if (space == param_space_unclassified) {
     // need to op to determine whether it refers to a kernel param or local
@@ -3331,7 +3333,20 @@ void decode_space(memory_space_t &space, ptx_thread_info *thread,
       mem = thread->get_param_memory();
       break;
     case shared_space:
-      mem = thread->m_shared_mem;
+      // We loop through each SM index
+      for(int smidx = 0; smidx < num_sm_per_cluster; smidx++){
+        // We check if the load address belongs to the current SM index
+        if(isspace_shared(smidx, addr)){
+          mem = shared_memory_lookup[smidx];
+          dsm_decoding_failure = 0;
+          break;
+        }
+      }
+      // This shouldn't be true or else we have an error
+      if(dsm_decoding_failure) {
+        printf("ERROR WHILE DECODING WHICH SM A SHARED MEMORY LOAD BELONGS TO\n");
+        abort();
+      }
       break;
     case sstarr_space:
       mem = thread->m_sstarr_mem;
@@ -5801,6 +5816,28 @@ void st_impl(const ptx_instruction *pI, ptx_thread_info *thread) {
   addr_t addr = addr_reg.u32;
 
   decode_space(space, thread, dst, mem, addr);
+
+  // Loop through the shared memory lookup table
+  unsigned store_smidx = NULL;
+  for(unsigned smidx = 0; smidx < num_sm_per_cluster; smidx++){
+    // If our memory pointer matches with the share memory lookup table
+    // we found the SM in which we are doing the store operation
+    if(mem == shared_memory_lookup[smidx]){
+      store_smidx = smidx;
+    }
+  }
+
+  // Make sure we found an smidx for the store operation
+  if(store_smidx != NULL){
+    // Make sure we are storing to a different SM shared memory
+    if(thread->m_hw_sid != store_smidx && space == shared_space){
+      printf("DSM SUCCESS: We are writing to SMIDX: %d FROM A THREAD IN SMIX: %d\n", store_smidx, thread->m_hw_sid);
+    }
+  }
+  else{
+    printf("ERROR: WHILE DOING STORE STORE_SMIDX IS NULL AFTER DECODE SPACE\n");
+    abort();
+  }
 
   size_t size;
   int t;

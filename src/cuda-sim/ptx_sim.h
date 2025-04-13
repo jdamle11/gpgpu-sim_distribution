@@ -473,6 +473,8 @@ class ptx_thread_info {
   ptx_warp_info *m_warp_info;
   ptx_cta_info *m_cta_info;
   ptx_reg_t m_last_set_operand_value;
+  unsigned m_hw_sid;
+
 
  private:
   bool m_functionalSimulationMode;
@@ -487,7 +489,7 @@ class ptx_thread_info {
   dim3 m_ctaid;
   unsigned m_gridid;
   bool m_thread_done;
-  unsigned m_hw_sid;
+  //unsigned m_hw_sid;
   unsigned m_hw_tid;
   unsigned m_hw_wid;
   unsigned m_hw_ctaid;

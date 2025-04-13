@@ -300,7 +300,7 @@ void warp_inst_t::generate_mem_accesses() {
   bool is_write = is_store();
 
   mem_access_type access_type;
-  printf("GENERATE MEM ACCESSES\n");
+  //printf("GENERATE MEM ACCESSES\n");
   switch (space.get_type()) {
     case const_space:
     case param_space_kernel:

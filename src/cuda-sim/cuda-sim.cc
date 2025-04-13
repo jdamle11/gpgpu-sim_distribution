@@ -31,6 +31,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "cuda-sim.h"
+//#include "our_cuda_header.h"
 
 #include "instructions.h"
 #include "ptx_ir.h"
@@ -55,6 +56,7 @@ typedef void *yyscan_t;
 #include "ptx_loader.h"
 #include "ptx_parser.h"
 #include "ptx_sim.h"
+#include "our_cuda_header.h"
 
 int g_debug_execution = 0;
 // Output debug information to file options
@@ -399,6 +401,7 @@ addr_t global_to_generic(addr_t addr) { return addr; }
 bool isspace_shared(unsigned smid, addr_t addr) {
   addr_t start = SHARED_GENERIC_START + smid * SHARED_MEM_SIZE_MAX;
   addr_t end = SHARED_GENERIC_START + (smid + 1) * SHARED_MEM_SIZE_MAX;
+  printf("SMIDX: %d  SHARED_START: %llx ADDRESS: %llx SHARED_END: %llx\n", smid, start, addr, end);
   if ((addr >= end) || (addr < start)) return false;
   return true;
 }
@@ -2059,6 +2062,8 @@ const warp_inst_t *gpgpu_context::ptx_fetch_inst(address_type pc) {
   return pc_to_instruction(pc);
 }
 
+std::map<unsigned, memory_space *> shared_memory_lookup;
+
 unsigned ptx_sim_init_thread(kernel_info_t &kernel,
                              ptx_thread_info **thread_info, int sid,
                              unsigned tid, unsigned threads_left,
@@ -2067,13 +2072,13 @@ unsigned ptx_sim_init_thread(kernel_info_t &kernel,
                              gpgpu_t *gpu, bool isInFunctionalSimulationMode) {
   std::list<ptx_thread_info *> &active_threads = kernel.active_threads();
 
-  static std::map<unsigned, memory_space *> shared_memory_lookup;
+  //static std::map<unsigned, memory_space *> shared_memory_lookup;
   static std::map<unsigned, memory_space *> sstarr_memory_lookup;
   static std::map<unsigned, ptx_cta_info *> ptx_cta_lookup;
   static std::map<unsigned, ptx_warp_info *> ptx_warp_lookup;
   static std::map<unsigned, std::map<unsigned, memory_space *> >
       local_memory_lookup;
-
+  //printf("Init Thread\n");                         
   if (*thread_info != NULL) {
     ptx_thread_info *thd = *thread_info;
     assert(thd->is_done());
@@ -2126,6 +2131,7 @@ unsigned ptx_sim_init_thread(kernel_info_t &kernel,
   // unsigned sm_idx = (tid/cta_size)*gpgpu_param_num_shaders + sid;
   unsigned sm_idx =
       hw_cta_id * gpu->gpgpu_ctx->func_sim->gpgpu_param_num_shaders + sid;
+  printf("SM_IDX:%d\n", sm_idx);
 
   if (shared_memory_lookup.find(sm_idx) == shared_memory_lookup.end()) {
     if (g_debug_execution >= 1) {

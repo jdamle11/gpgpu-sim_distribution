@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+.version 6.3
+.target sm_30
+.address_size 64
+
+
+
+
+.visible .entry _Z6kernelv(
+
+)
+{
+.reg .b32 %r<2>;
+
+	.shared .align 4 .u32 _ZZ6kernelvE11shared_data;
+
+mov.u32 %r1, 5;
+st.shared.u32 [_ZZ6kernelvE11shared_data], %r1;
+bar.sync 0;
+ret;
+}
+
+

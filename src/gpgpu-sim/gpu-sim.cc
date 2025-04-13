@@ -87,6 +87,11 @@ bool g_interactive_debugger_enabled = false;
 
 tr1_hash_map<new_addr_type, unsigned> address_random_interleaving;
 
+/*****************************************************/
+/* HERE WE PUT OUR OWN VARIABLE FOR THE NUMBER OF SMs*/
+/*****************************************************/
+unsigned num_sm_per_cluster;
+
 /* Clock Domains */
 
 #define CORE 0x01
@@ -424,6 +429,12 @@ void shader_core_config::reg_options(class OptionParser *opp) {
   option_parser_register(opp, "-gpgpu_n_cores_per_cluster", OPT_UINT32,
                          &n_simt_cores_per_cluster,
                          "number of simd cores per cluster", "3");
+                        
+  /**************************************************/
+  /* Assign the config variable to our own variable */
+  /**************************************************/
+  option_parser_register(opp, "-gpgpu_num_simd_cores", OPT_UINT32, &num_sm_per_cluster, "number of simd cores in cluster", "3");
+
   option_parser_register(opp, "-gpgpu_n_cluster_ejection_buffer_size",
                          OPT_UINT32, &n_simt_ejection_buffer_size,
                          "number of packets in ejection buffer", "8");
@@ -1651,13 +1662,13 @@ void shader_core_ctx::mem_instruction_stats(const warp_inst_t &inst) {
   unsigned active_count = inst.active_count();
   // this breaks some encapsulation: the is_[space] functions, if you change
   // those, change this.
-  printf("Active count Outside Switch\n");
+  //printf("Active count Outside Switch\n");
   switch (inst.space.get_type()) {
     case undefined_space:
     case reg_space:
       break;
     case shared_space:
-      printf("Active Count Inside Shared Space\n");
+      //printf("Active Count Inside Shared Space\n");
       m_stats->gpgpu_n_shmem_insn += active_count;
       break;
     case sstarr_space:
@@ -1674,6 +1685,11 @@ void shader_core_ctx::mem_instruction_stats(const warp_inst_t &inst) {
       m_stats->gpgpu_n_tex_insn += active_count;
       break;
     case global_space:
+      // if (inst.is_store())
+      //   m_stats->gpgpu_n_store_insn += active_count;
+      // else
+      //   m_stats->gpgpu_n_load_insn += active_count;
+      // break;
     case local_space:
       if (inst.is_store())
         m_stats->gpgpu_n_store_insn += active_count;
